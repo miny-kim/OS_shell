@@ -17,6 +17,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <wait.h>
 
 #include "types.h"
 #include "parser.h"
@@ -48,7 +51,26 @@ static void set_timeout(unsigned int timeout)
 }
 /*          ****** DO NOT MODIFY ANYTHING UP TO THIS LINE ******      */
 /*====================================================================*/
+int change_dir(int nr_tokens, char *tokens[])
+{
+        char buf[255];
+ //       printf("token : %s\n", tokens[1]);
+        if(strncmp(tokens[1], "~", sizeof("~")) == 0)
+            chdir(getenv("HOME"));
+        else
+            if(chdir(tokens[1]))
+            {
+//                printf("Error");
+                _exit(0);
+                return 0;
+            }
 
+//        getcwd(buf, 255);
+//        printf("now : %s\n", buf);
+
+        return 1;
+       
+  }
 
 /***********************************************************************
  * run_command()
@@ -65,16 +87,88 @@ static void set_timeout(unsigned int timeout)
 static int run_command(int nr_tokens, char *tokens[])
 {
 	/* This function is all yours. Good luck! */
+    int sum;
+    int * status;
+    int pid;
 
 	if (strncmp(tokens[0], "exit", strlen("exit")) == 0) {
 		return 0;
 	}
+    else if(!strncmp(tokens[0], "for", strlen("for")))
+    {
+        int i = 2;
+        int f = 1;
+        int cd = 0;
+        sum = atoi(tokens[1]);
+    
+        while(tokens[i] != NULL)
+        {
+            if(strncmp(tokens[i], "cd", strlen("cd")) == 0)
+            {
+                cd = 1;
+                f = i;
+            }
+            if(strncmp(tokens[i], "for", strlen("for")) == 0)
+            {
+              //  printf("i : %d, nr : %d\n", i, nr_tokens);
+                if(i>=nr_tokens-1)
+                {
+                    printf("break");
+                   break;
+                }
+                sum *= atoi(tokens[++i]);
+                f = i;
+           }
+            i++;
+        }
+           
+        for(int i = 0; i<sum; i++)
+        {  
+            if(cd == 1)
+                change_dir(nr_tokens, &tokens[f]);
+            else
+            {
+                if((pid = fork())==0)
+                {  
+                    execvp(tokens[f+1], &tokens[f+1]);
+                    _exit(0);
+                }
+                if(pid>0)
+                {
+                     wait(0);
+                }     
+            }
+         }
+    }
+    else if(!strncmp(tokens[0], "cd", strlen("cd")))
+    {
+        change_dir(nr_tokens, tokens);
 
-	/*
-	fork();
-	exec();
-	...
-	*/
+    }
+    else if(!strncmp(tokens[0], "prompt", strlen("prompt")))
+    {
+
+    }
+    else if(!strncmp(tokens[0], "timeout", strlen("timeout")))
+    {
+
+    }
+    else
+    {
+        if((pid = fork()) == 0)
+        {
+            if(execvp(tokens[0], tokens)<0)
+            {
+                fprintf(stderr, "No such file or directory\n");
+               // close(fd1);
+                _exit(0);
+            }
+        }
+        else
+        {
+            wait( 0);
+        }
+    }
 
 	return 1;
 }
