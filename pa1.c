@@ -11,7 +11,7 @@
  * MERCHANTIABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
- **********************************************************************/
+ **********************************************************************/a
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,7 +75,7 @@ int change_dir(int nr_tokens, char *tokens[])
 
 void signal_handler(int signal){
    fprintf(stderr," %dis timed out\n", signal);
-    kill(getpid(), 9);
+    
 
 }
 
