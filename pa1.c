@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <wait.h>
+#include <signal.h>
 
 #include "types.h"
 #include "parser.h"
@@ -70,7 +71,18 @@ int change_dir(int nr_tokens, char *tokens[])
 
         return 1;
        
-  }
+}
+
+void signal_handler(int signal_number){
+    printf("%d signaled!\n", signal_number);
+    alarm(__timeout);
+}
+
+struct sigaction sa = {
+    .sa_handler = signal_handler,
+    .sa_flags = 0,
+}, old_sa;
+
 
 /***********************************************************************
  * run_command()
@@ -90,6 +102,9 @@ static int run_command(int nr_tokens, char *tokens[])
     int sum;
     int * status;
     int pid;
+   int j = 0;
+   sigaction(SIGALRM, &sa, 0);
+//    alarm(__timeout);
 
 	if (strncmp(tokens[0], "exit", strlen("exit")) == 0) {
 		return 0;
@@ -147,11 +162,35 @@ static int run_command(int nr_tokens, char *tokens[])
     }
     else if(!strncmp(tokens[0], "prompt", strlen("prompt")))
     {
+        
+        memset(&__prompt, '\0',MAX_TOKEN_LEN);
+        strncpy(&__prompt[j], tokens[1], strlen(tokens[1]));
+    
+        printf("%s\n", __prompt);
 
     }
     else if(!strncmp(tokens[0], "timeout", strlen("timeout")))
     {
+        if(nr_tokens == 1)
+            printf("Current timeout is %d second\n", __timeout);
+        else
+            set_timeout(atoi(tokens[1]));
+        
 
+        pid = fork();
+    
+       if(pid == 0)
+       {
+           printf("id : %d, time : %d\n", pid, __timeout);
+            sigaction(SIGALRM, &sa, 0);
+           alarm(__timeout);
+
+            _exit(0);
+       }
+       else
+       {
+           wait(0);
+       }
     }
     else
     {
