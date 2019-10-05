@@ -73,9 +73,10 @@ int change_dir(int nr_tokens, char *tokens[])
        
 }
 
-void signal_handler(int signal_number){
-    printf("%d signaled!\n", signal_number);
-    alarm(__timeout);
+void signal_handler(int signal){
+   fprintf(stderr," %dis timed out\n", signal);
+    kill(getpid(), 9);
+
 }
 
 struct sigaction sa = {
@@ -103,7 +104,7 @@ static int run_command(int nr_tokens, char *tokens[])
     int * status;
     int pid;
    int j = 0;
-   sigaction(SIGALRM, &sa, 0);
+//   sigaction(SIGALRM, &sa, 0);
 //    alarm(__timeout);
 
 	if (strncmp(tokens[0], "exit", strlen("exit")) == 0) {
@@ -166,7 +167,7 @@ static int run_command(int nr_tokens, char *tokens[])
         memset(&__prompt, '\0',MAX_TOKEN_LEN);
         strncpy(&__prompt[j], tokens[1], strlen(tokens[1]));
     
-        printf("%s\n", __prompt);
+    //    printf("%s\n", __prompt);
 
     }
     else if(!strncmp(tokens[0], "timeout", strlen("timeout")))
@@ -176,21 +177,9 @@ static int run_command(int nr_tokens, char *tokens[])
         else
             set_timeout(atoi(tokens[1]));
         
-
-        pid = fork();
-    
-       if(pid == 0)
-       {
-           printf("id : %d, time : %d\n", pid, __timeout);
-            sigaction(SIGALRM, &sa, 0);
-           alarm(__timeout);
-
-            _exit(0);
-       }
-       else
-       {
-           wait(0);
-       }
+        sigaction(SIGALRM, &sa, 0);
+        alarm(__timeout);
+   
     }
     else
     {
