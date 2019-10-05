@@ -25,6 +25,9 @@
 #include "types.h"
 #include "parser.h"
 
+char * name;
+int pid;
+
 /*====================================================================*/
 /*          ****** DO NOT MODIFY ANYTHING FROM THIS LINE ******       */
 /**
@@ -54,28 +57,24 @@ static void set_timeout(unsigned int timeout)
 /*====================================================================*/
 int change_dir(int nr_tokens, char *tokens[])
 {
-        char buf[255];
  //       printf("token : %s\n", tokens[1]);
         if(strncmp(tokens[1], "~", sizeof("~")) == 0)
             chdir(getenv("HOME"));
         else
             if(chdir(tokens[1]))
             {
-//                printf("Error");
                 _exit(0);
                 return 0;
             }
 
-//        getcwd(buf, 255);
-//        printf("now : %s\n", buf);
 
         return 1;
        
 }
 
 void signal_handler(int signal){
-   fprintf(stderr," %dis timed out\n", signal);
-    
+   fprintf(stderr," %s is timed out\n", name);
+    kill(pid, SIGKILL);
 
 }
 
@@ -102,10 +101,7 @@ static int run_command(int nr_tokens, char *tokens[])
 	/* This function is all yours. Good luck! */
     int sum;
     int * status;
-    int pid;
    int j = 0;
-//   sigaction(SIGALRM, &sa, 0);
-//    alarm(__timeout);
 
 	if (strncmp(tokens[0], "exit", strlen("exit")) == 0) {
 		return 0;
